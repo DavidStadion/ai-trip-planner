@@ -1040,9 +1040,9 @@ RULES:
               style={{
                 width: '100%',
                 padding: '16px',
-                backgroundColor: '#FFF',
-                color: '#111827',
-                border: '2px solid #E5E7EB',
+                backgroundColor: '#10B981',
+                color: '#FFF',
+                border: '2px solid #10B981',
                 borderRadius: '30px',
                 fontSize: '16px',
                 fontWeight: '600',
