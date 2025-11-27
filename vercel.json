@@ -1,8 +1,5 @@
 {
     "buildCommand": "npm run build",
     "outputDirectory": "dist",
-    "framework": "vite",
-    "env": {
-        "ANTHROPIC_API_KEY": "@anthropic_api_key"
-    }
+    "framework": "vite"
 }
