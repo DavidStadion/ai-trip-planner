@@ -37,12 +37,129 @@ const AITripPlanner = () => {
   const [loadingSaves, setLoadingSaves] = useState(false)
   const [currentTripId, setCurrentTripId] = useState(null)
   const [focusedInput, setFocusedInput] = useState(null)
+  const [showPrerequisites, setShowPrerequisites] = useState(false)
+  const [selectedPrerequisites, setSelectedPrerequisites] = useState([])
 
   const availableTags = ['Coastal', 'Mountains', 'Lakes', 'Historical']
+
+  const prerequisiteCategories = [
+    {
+      name: 'Access & Mobility',
+      icon: '♿',
+      options: [
+        'Wheelchair accessible',
+        'Step-free',
+        'Low-impact',
+        'Fitness level: Low',
+        'Fitness level: Medium',
+        'Fitness level: High',
+        'Avoid steep terrain',
+        'Public transport only',
+      ],
+    },
+    {
+      name: 'Pet & Family',
+      icon: '👨‍👩‍👧‍👦',
+      options: [
+        'Dog-friendly',
+        '1 dog',
+        '2+ dogs',
+        'Child-friendly',
+        'Pushchair-friendly',
+      ],
+    },
+    {
+      name: 'Budget & Time',
+      icon: '💰',
+      options: [
+        'Low budget',
+        'Medium budget',
+        'High budget',
+        'Max walking: 5km/day',
+        'Max walking: 10km/day',
+        'Max walking: 15km/day',
+        'Max drive: 1 hour',
+        'Max drive: 2 hours',
+        'Slow travel',
+        'Fast travel',
+      ],
+    },
+    {
+      name: 'Sensory & Comfort',
+      icon: '🧘',
+      options: [
+        'Avoid crowds',
+        'Indoor-only for rain',
+        'Quiet spaces',
+        'Avoid enclosed spaces',
+        'Avoid nightlife/alcohol',
+        'LGBTQ+ friendly',
+        'Safety-first routing',
+      ],
+    },
+    {
+      name: 'Dietary',
+      icon: '🍽️',
+      options: [
+        'Vegan',
+        'Vegetarian',
+        'Halal',
+        'Kosher',
+        'Gluten-free',
+        'Nut-free',
+        'Dairy-free',
+        'Try local food',
+      ],
+    },
+    {
+      name: 'Neurodiverse',
+      icon: '🧠',
+      options: [
+        'Low sensory',
+        'Predictable environments',
+        'No flashing lights',
+        'No loud music',
+      ],
+    },
+    {
+      name: 'Practical',
+      icon: '🔧',
+      options: [
+        'Weather-flexible options',
+        'Parking availability',
+        'EV charging needed',
+        'Toilets available',
+        'Indoor preference',
+        'Outdoor preference',
+      ],
+    },
+    {
+      name: 'Experience Style',
+      icon: '✨',
+      options: [
+        'Introvert-friendly',
+        'Extrovert-friendly',
+        'Local secrets',
+        'Famous landmarks',
+        'Photography-focused',
+        'Food-first',
+        'Walking-first',
+        'Adventure-focused',
+      ],
+    },
+  ]
 
   const toggleLuckyTag = (tag) => {
     setLuckyTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    )
+  }
+
+  const togglePrerequisite = (option) => {
+    setSelectedPrerequisites((prev) =>
+      prev.includes(option)
+        ? prev.filter((p) => p !== option)
+        : [...prev, option]
     )
   }
 
@@ -113,51 +230,37 @@ const AITripPlanner = () => {
               role: 'user',
               content: `Create a UK travel itinerary for: "${tripInput}"
 ${numDays ? `Trip duration: ${numDays} days` : ''}
-${postcode ? `Starting from: ${postcode} (N8/N9 = North London, NOT Northern Ireland)` : ''}
-${arrivalDate ? `Arrival: ${arrivalDate}` : ''}
-Daily schedule: ${startTime} to ${endTime}
+${postcode ? `Starting from postcode: ${postcode}` : ''}
+${arrivalDate ? `Arrival date: ${arrivalDate}` : ''}
+${startTime ? `Start time: ${startTime}` : ''}
+${endTime ? `End time: ${endTime}` : ''}
+${selectedPrerequisites.length > 0 ? `\nIMPORTANT Constraints & Prerequisites:\n- ${selectedPrerequisites.join('\n- ')}` : ''}
 
-REQUIRED FORMAT (follow EXACTLY):
+Please provide:
+1. TRAVEL: Best travel options (train/car/bus) with approx times/costs
+2. HIGHLIGHTS: Top 3 must-see spots
+3. OVERVIEW: Brief summary of the trip vibe
+4. DAY BY DAY: Detailed itinerary
+   - For each day, start with "DAY X - [Title]"
+   - Include specific times for activities
+   - Include "Lunch at [Place]" and "Dinner at [Place]" recommendations
+5. TIPS: Practical advice (packing, booking ahead, etc.)
 
-TRAVEL:
-🚗 Driving: [time] ([distance])
-🚂 Train: [time]
-✈️ Flight: [only if needed]
-
+Format the response exactly like this:
+TRAVEL: [details]
 HIGHLIGHTS:
-1. [Must-do #1] - [why]
-2. [Must-do #2] - [why]
-3. [Must-do #3] - [why]
-
-OVERVIEW:
-[One paragraph about the trip]
-
+1. [highlight 1]
+2. [highlight 2]
+3. [highlight 3]
+OVERVIEW: [summary]
 DAY 1 - [Title]
-09:00 - [Activity at specific location]
-10:00 - [Activity]
-11:00 - [Activity]
-12:00 - [Lunch at specific place]
-*[Insider tip in italics]*
-13:00 - [Continue...]
-
-DAY 2 - [Title]
 09:00 - [Activity]
 ...
-
+DAY 2 - [Title]
+...
 TIPS:
+[Category]: [Tip]
 
-Best Areas to Stay:
-[Specific hotel/area recommendations]
-
-Transport:
-[Train, bus, car details]
-
-Budget:
-[£, ££, £££ guidance]
-
-RULES:
-- Hour-by-hour times
-- Specific venue names
 - UK destinations only
 - Insider tips in *italics*
 - Keep activities realistic for timeframe`,
@@ -646,6 +749,9 @@ RULES:
     >
       <style>{`
         @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+        @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.1);opacity:0.8}}
+        @keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-10px)}}
+        @keyframes shimmer{0%{transform:translateX(0)}100%{transform:translateX(100%)}}
         @media (max-width: 768px) {
           .input-grid { grid-template-columns: 1fr !important; }
         }
@@ -812,68 +918,77 @@ RULES:
 
             <div
               style={{
-                backgroundColor: '#FFF',
-                borderRadius: '16px',
-                border: `2px solid ${focusedInput === 'days' ? '#3B82F6' : '#E5E7EB'}`,
-                padding: '16px 20px',
-                marginBottom: '12px',
-                display: 'flex',
-                alignItems: 'center',
+                display: 'grid',
+                gridTemplateColumns: windowWidth >= 640 ? '1fr 1fr' : '1fr',
                 gap: '12px',
-                transition: 'border-color 0.2s',
+                marginBottom: '12px',
               }}
             >
-              <Clock size={20} color="#6B7280" />
-              <input
-                type="number"
-                min="1"
-                max="30"
-                value={numDays}
-                onChange={(e) => setNumDays(e.target.value)}
-                onFocus={() => setFocusedInput('days')}
-                onBlur={() => setFocusedInput(null)}
-                placeholder="How many days? (e.g., 3)"
+              <div
                 style={{
-                  flex: 1,
-                  border: 'none',
-                  backgroundColor: 'transparent',
-                  fontSize: '16px',
-                  outline: 'none',
-                  fontFamily: 'inherit',
+                  backgroundColor: '#FFF',
+                  borderRadius: '16px',
+                  border: `2px solid ${focusedInput === 'days' ? '#3B82F6' : '#E5E7EB'}`,
+                  padding: '16px 20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  transition: 'border-color 0.2s',
                 }}
-              />
-            </div>
+              >
+                <Clock size={20} color="#6B7280" />
+                <input
+                  type="number"
+                  min="1"
+                  max="30"
+                  value={numDays}
+                  onChange={(e) => setNumDays(e.target.value)}
+                  onFocus={() => setFocusedInput('days')}
+                  onBlur={() => setFocusedInput(null)}
+                  placeholder="Days (e.g. 3)"
+                  style={{
+                    flex: 1,
+                    width: '100%',
+                    border: 'none',
+                    backgroundColor: 'transparent',
+                    fontSize: '16px',
+                    outline: 'none',
+                    fontFamily: 'inherit',
+                  }}
+                />
+              </div>
 
-            <div
-              style={{
-                backgroundColor: '#FFF',
-                borderRadius: '16px',
-                border: `2px solid ${focusedInput === 'postcode' ? '#3B82F6' : '#E5E7EB'}`,
-                padding: '16px 20px',
-                marginBottom: '12px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                transition: 'border-color 0.2s',
-              }}
-            >
-              <MapPin size={20} color="#6B7280" />
-              <input
-                type="text"
-                value={postcode}
-                onChange={(e) => setPostcode(e.target.value)}
-                onFocus={() => setFocusedInput('postcode')}
-                onBlur={() => setFocusedInput(null)}
-                placeholder="Your postcode (optional)"
+              <div
                 style={{
-                  flex: 1,
-                  border: 'none',
-                  backgroundColor: 'transparent',
-                  fontSize: '16px',
-                  outline: 'none',
-                  fontFamily: 'inherit',
+                  backgroundColor: '#FFF',
+                  borderRadius: '16px',
+                  border: `2px solid ${focusedInput === 'postcode' ? '#3B82F6' : '#E5E7EB'}`,
+                  padding: '16px 20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  transition: 'border-color 0.2s',
                 }}
-              />
+              >
+                <MapPin size={20} color="#6B7280" />
+                <input
+                  type="text"
+                  value={postcode}
+                  onChange={(e) => setPostcode(e.target.value)}
+                  onFocus={() => setFocusedInput('postcode')}
+                  onBlur={() => setFocusedInput(null)}
+                  placeholder="Postcode (optional)"
+                  style={{
+                    flex: 1,
+                    width: '100%',
+                    border: 'none',
+                    backgroundColor: 'transparent',
+                    fontSize: '16px',
+                    outline: 'none',
+                    fontFamily: 'inherit',
+                  }}
+                />
+              </div>
             </div>
 
             <div
@@ -989,6 +1104,107 @@ RULES:
                   }}
                 />
               </div>
+            </div>
+
+            {/* Prerequisites Section */}
+            <div style={{ marginBottom: '24px' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: '12px',
+                }}
+              >
+                <label
+                  style={{
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    color: '#374151',
+                  }}
+                >
+                  Prerequisites (Optional)
+                </label>
+                <button
+                  onClick={() => setShowPrerequisites(true)}
+                  style={{
+                    fontSize: '14px',
+                    color: '#3B82F6',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                  }}
+                >
+                  + Add Constraints
+                </button>
+              </div>
+
+              {selectedPrerequisites.length > 0 ? (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {selectedPrerequisites.map((prereq, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        backgroundColor: '#EFF6FF',
+                        color: '#1D4ED8',
+                        padding: '6px 12px',
+                        borderRadius: '20px',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        border: '1px solid #BFDBFE',
+                      }}
+                    >
+                      {prereq}
+                      <button
+                        onClick={() => togglePrerequisite(prereq)}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          padding: 0,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          color: '#1D4ED8',
+                        }}
+                      >
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <line x1="18" y1="6" x2="6" y2="18"></line>
+                          <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div
+                  onClick={() => setShowPrerequisites(true)}
+                  style={{
+                    padding: '16px',
+                    border: '2px dashed #E5E7EB',
+                    borderRadius: '16px',
+                    color: '#9CA3AF',
+                    fontSize: '14px',
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    backgroundColor: '#F9FAFB',
+                  }}
+                >
+                  Add constraints like accessibility, budget, or dietary needs...
+                </div>
+              )}
             </div>
 
             <button
@@ -1153,14 +1369,91 @@ RULES:
                 style={{
                   backgroundColor: '#FFF',
                   borderRadius: '16px',
-                  padding: '20px',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                  padding: '40px 20px',
+                  boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
                   textAlign: 'center',
-                  color: '#6B7280',
                   marginBottom: '16px',
+                  position: 'relative',
+                  overflow: 'hidden',
                 }}
               >
-                {status}
+                {/* Animated gradient background */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: '-100%',
+                    width: '200%',
+                    height: '100%',
+                    background: 'linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.05), transparent)',
+                    animation: 'shimmer 2s infinite',
+                    pointerEvents: 'none',
+                  }}
+                />
+
+                {/* Rotating travel emojis */}
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    marginBottom: '20px',
+                    fontSize: '40px',
+                    lineHeight: 1,
+                  }}
+                >
+                  <span style={{ animation: 'pulse 2s ease-in-out infinite', animationDelay: '0s' }}>✈️</span>
+                  <span style={{ animation: 'pulse 2s ease-in-out infinite', animationDelay: '0.2s' }}>🚗</span>
+                  <span style={{ animation: 'pulse 2s ease-in-out infinite', animationDelay: '0.4s' }}>🚶</span>
+                  <span style={{ animation: 'pulse 2s ease-in-out infinite', animationDelay: '0.6s' }}>⛴️</span>
+                  <span style={{ animation: 'pulse 2s ease-in-out infinite', animationDelay: '0.8s' }}>🚴</span>
+                </div>
+
+                {/* Status text */}
+                <div
+                  style={{
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    color: '#111827',
+                    marginBottom: '20px',
+                  }}
+                >
+                  {status}
+                </div>
+
+                {/* Animated dots */}
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '6px' }}>
+                  <div
+                    style={{
+                      width: '8px',
+                      height: '8px',
+                      borderRadius: '50%',
+                      backgroundColor: '#3B82F6',
+                      animation: 'bounce 1.4s infinite ease-in-out',
+                      animationDelay: '0s',
+                    }}
+                  />
+                  <div
+                    style={{
+                      width: '8px',
+                      height: '8px',
+                      borderRadius: '50%',
+                      backgroundColor: '#3B82F6',
+                      animation: 'bounce 1.4s infinite ease-in-out',
+                      animationDelay: '0.2s',
+                    }}
+                  />
+                  <div
+                    style={{
+                      width: '8px',
+                      height: '8px',
+                      borderRadius: '50%',
+                      backgroundColor: '#3B82F6',
+                      animation: 'bounce 1.4s infinite ease-in-out',
+                      animationDelay: '0.4s',
+                    }}
+                  />
+                </div>
               </div>
             )}
 
@@ -1964,6 +2257,207 @@ RULES:
                   </div>
                 ))
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Prerequisites Modal */}
+      {showPrerequisites && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            zIndex: 2000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+          }}
+          onClick={() => setShowPrerequisites(false)}
+        >
+          <div
+            style={{
+              backgroundColor: '#FFF',
+              borderRadius: '16px',
+              width: windowWidth >= 768 ? '90%' : '95%',
+              maxWidth: '900px',
+              height: windowWidth >= 768 ? '85vh' : '90vh',
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                padding: windowWidth >= 640 ? '24px' : '16px',
+                borderBottom: '1px solid #E5E7EB',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <div>
+                <h2
+                  style={{
+                    fontSize: windowWidth >= 640 ? '24px' : '20px',
+                    fontWeight: '700',
+                    margin: '0 0 4px 0',
+                    color: '#111827',
+                  }}
+                >
+                  Trip Prerequisites
+                </h2>
+                <p
+                  style={{
+                    fontSize: '14px',
+                    color: '#6B7280',
+                    margin: 0,
+                  }}
+                >
+                  Select constraints to shape your perfect itinerary
+                </p>
+              </div>
+              <button
+                onClick={() => setShowPrerequisites(false)}
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  border: 'none',
+                  backgroundColor: '#F3F4F6',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '20px',
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            <div
+              style={{
+                flex: 1,
+                overflowY: 'auto',
+                padding: windowWidth >= 640 ? '24px' : '16px',
+              }}
+            >
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns:
+                    windowWidth >= 1024
+                      ? 'repeat(3, 1fr)'
+                      : windowWidth >= 640
+                        ? 'repeat(2, 1fr)'
+                        : '1fr',
+                  gap: '24px',
+                }}
+              >
+                {prerequisiteCategories.map((category) => (
+                  <div key={category.name}>
+                    <h3
+                      style={{
+                        fontSize: '16px',
+                        fontWeight: '700',
+                        color: '#111827',
+                        marginBottom: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                      }}
+                    >
+                      <span>{category.icon}</span> {category.name}
+                    </h3>
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: '8px',
+                      }}
+                    >
+                      {category.options.map((option) => (
+                        <button
+                          key={option}
+                          onClick={() => togglePrerequisite(option)}
+                          style={{
+                            padding: '6px 12px',
+                            borderRadius: '20px',
+                            border: '1px solid',
+                            borderColor: selectedPrerequisites.includes(option)
+                              ? '#3B82F6'
+                              : '#E5E7EB',
+                            backgroundColor: selectedPrerequisites.includes(
+                              option
+                            )
+                              ? '#EFF6FF'
+                              : '#FFF',
+                            color: selectedPrerequisites.includes(option)
+                              ? '#1D4ED8'
+                              : '#4B5563',
+                            fontSize: '13px',
+                            fontWeight: '500',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            textAlign: 'left',
+                          }}
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div
+              style={{
+                padding: '16px 24px',
+                borderTop: '1px solid #E5E7EB',
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: '12px',
+                backgroundColor: '#F9FAFB',
+              }}
+            >
+              <button
+                onClick={() => setSelectedPrerequisites([])}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  border: '1px solid #E5E7EB',
+                  backgroundColor: '#FFF',
+                  color: '#374151',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                }}
+              >
+                Clear All
+              </button>
+              <button
+                onClick={() => setShowPrerequisites(false)}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  backgroundColor: '#111827',
+                  color: '#FFF',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                }}
+              >
+                Done ({selectedPrerequisites.length})
+              </button>
             </div>
           </div>
         </div>
